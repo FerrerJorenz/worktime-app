@@ -5,7 +5,7 @@ function App() {
   return (
     <div className="flex flex-col items-center min-h-screen">
       <Header />
-      <div className="flex-1 flex flex-col items-center justify-center w-full">
+      <div className="flex-1 flex flex-col items-center w-full">
         <Dashboard />
       </div>
     </div>

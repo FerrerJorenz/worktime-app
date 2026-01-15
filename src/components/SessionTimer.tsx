@@ -1,182 +1,145 @@
 import { useState, useEffect } from "react";
+import type { SessionFormData } from "./Dashboard";
 
-export default function SessionTimer() {
-  const [seconds, setSeconds] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
-  const [error, setError] = useState("");
-  const [sessionName, setSessionName] = useState("");
-  const [workType, setWorkType] = useState("");
-  const [goalSeconds, setGoalSeconds] = useState(0);
-  const [selectedDuration, setSelectedDuration] = useState(0);
-
-const timerOptions = [
-  { label: "5 seconds", seconds: 5},
-  { label: "30 minutes", seconds: 30 * 60 },
-  { label: "1 hour", seconds: 60 * 60 },
-  { label: "2 hours", seconds: 2 * 60 * 60 },
-  { label: "3 hours", seconds: 3 * 60 * 60 },
-];
-
-  // Timer Logic
-useEffect(() => {
-  if (!isRunning || seconds === 0) return;
-
-  const interval = setInterval(() => {
-    setSeconds((prev) => {
-      if (prev > 0) return prev - 1;
-
-      clearInterval(interval);
-      setIsRunning(false);
-
-      setGoalSeconds(0);
-
-      return 0;
-    });
-  }, 1000);
-
-  return () => clearInterval(interval);
-}, [isRunning, seconds]);
-
- // Circle Progress Logic
-const radius = 50;
-const circumference = 2 * Math.PI * radius;
-const offset =
-  goalSeconds > 0
-    ? circumference - (seconds / goalSeconds) * circumference
-    : circumference;
-
-    const formatTime = (sec: number) => {
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  const s = sec % 60;
-  const pad = (n: number) => n.toString().padStart(2, "0");
-  return `${pad(h)}:${pad(m)}:${pad(s)}`;
+type Props = {
+  isRunning: boolean;
+  setIsRunning: (isRunning: boolean) => void;
+  formData: SessionFormData;
+  onSessionComplete: (duration: number) => void;
+  onReset: () => void;
+  onValidate: () => boolean;
 };
 
+export default function SessionTimer({
+  isRunning,
+  setIsRunning,
+  formData,
+  onSessionComplete,
+  onReset,
+  onValidate
+}: Props) {
+  const [seconds, setSeconds] = useState(0);
+
+  // Stopwatch Logic
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    if (isRunning) {
+      interval = setInterval(() => {
+        setSeconds((prev) => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isRunning]);
+
+  const formatTime = (totalSeconds: number) => {
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    const pad = (n: number) => n.toString().padStart(2, "0");
+    return `${pad(h)}:${pad(m)}:${pad(s)}`;
+  };
+
+  const calculateProgress = () => {
+    if (formData.goalDuration === 0) return 0;
+    return Math.min((seconds / formData.goalDuration) * 100, 100);
+  };
+
+  const handleStart = () => {
+    if (onValidate()) {
+      setIsRunning(true);
+    }
+  };
+
+  const handleStop = () => {
+    onSessionComplete(seconds);
+    setSeconds(0);
+  };
+
+  const handleResetClick = () => {
+    setSeconds(0);
+    onReset();
+  };
 
   return (
-    <div className="flex flex-col items-center">
-      <svg width="120" height="120"> //
-        <circle
-          cx="60"
-          cy="60"
-          r={radius}
-          stroke="#eee"
-          strokeWidth="10"
-          fill="transparent"
-        />
-        <circle
-          cx="60"
-          cy="60"
-          r={radius}
-          stroke="#4ade80"
-          strokeWidth="10"
-          fill="transparent"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          transform="rotate(-90 60 60)"
-        />
-      </svg>
-        <div className="mt-2 text-xl font-bold">{formatTime(seconds)}</div>
-      <div className="mt-2 mb-6">
+    <div className="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-2xl p-8 flex flex-col items-center justify-center relative overflow-hidden shadow-lg h-full min-h-[400px]">
+
+      {/* Background radial gradient effect */}
+      <div className="absolute top-0 left-0 right-0 h-32 bg-[radial-gradient(ellipse_at_center,_var(--color-brand)_0%,_transparent_70%)] opacity-10 pointer-events-none"></div>
+
+      <div className="flex items-center gap-2 mb-8 text-[var(--color-brand)] font-medium bg-[rgba(0,229,153,0.1)] px-4 py-1.5 rounded-full border border-[rgba(0,229,153,0.2)]">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+        <span>Session Timer</span>
+      </div>
+
+      <div className="relative mb-10 group">
+        {/* Progress Ring */}
+        <div className="relative w-64 h-64 flex items-center justify-center">
+          {/* Simple visual ring for now, can be SVG for real progress */}
+          <svg className="w-full h-full transform -rotate-90">
+            <circle
+              cx="128"
+              cy="128"
+              r="120"
+              fill="none"
+              stroke="var(--color-bg-input)"
+              strokeWidth="8"
+            />
+            <circle
+              cx="128"
+              cy="128"
+              r="120"
+              fill="none"
+              stroke="var(--color-brand)"
+              strokeWidth="8"
+              strokeDasharray={2 * Math.PI * 120}
+              strokeDashoffset={2 * Math.PI * 120 * (1 - calculateProgress() / 100)}
+              className="transition-all duration-1000 ease-linear"
+              strokeLinecap="round"
+              style={{ opacity: formData.goalDuration > 0 ? 1 : 0 }}
+            />
+          </svg>
+
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <div className="text-7xl font-mono font-bold tracking-tight text-white drop-shadow-[0_0_15px_rgba(0,229,153,0.3)] tabular-nums">
+              {formatTime(seconds)}
+            </div>
+            {formData.goalDuration > 0 && (
+              <div className="mt-2 text-sm font-medium text-[var(--color-text-secondary)] flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>
+                Goal: {formatTime(formData.goalDuration)}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex gap-4 w-full max-w-xs z-10">
         {!isRunning ? (
           <button
-            onClick={() => {
-              if (goalSeconds === 0) {
-                setError("Please select a session duration.");
-                return;
-              }
-
-              if (!sessionName.trim()) {
-                setError("Please enter a session name.");
-                return;
-              }
-
-              if (!workType) {
-                setError("Please select a work type.");
-                return;
-              }
-
-              setError("");
-              setIsRunning(true);
-
-              // Clear form
-              setSessionName("");
-              setWorkType("");
-              setSelectedDuration(0);
-
-
-            }}
-            className="bg-green-600 text-white p-2 rounded mr-2"
+            onClick={handleStart}
+            className="flex-1 bg-[var(--color-brand)] hover:bg-[var(--color-brand-hover)] text-[var(--color-bg-dark)] py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(0,229,153,0.4)] hover:shadow-[0_0_30px_rgba(0,229,153,0.6)] active:translate-y-0.5"
           >
-            Start
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+            Start Session
           </button>
         ) : (
           <button
-            onClick={() => setIsRunning(false)}
-            className="bg-red-600 text-white p-2 rounded mr-2"
+            onClick={handleStop}
+            className="flex-1 bg-red-500 hover:bg-red-600 text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(239,68,68,0.4)]"
           >
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
             Stop
           </button>
         )}
+
         <button
-            onClick={() => {
-              setSeconds(0);
-              setGoalSeconds(0);
-              setSelectedDuration(0);
-              setSessionName("");
-              setWorkType("");
-              setIsRunning(false);
-            }}
-            className="bg-gray-600 text-white p-2 rounded"
-          >
-            Reset
+          onClick={handleResetClick}
+          className="px-4 py-4 rounded-xl bg-[var(--color-bg-input)] text-[var(--color-text-secondary)] hover:text-white hover:bg-[#374151] border border-[var(--color-border)]"
+          title="Reset"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2v6h6" /><path d="M21 12A9 9 0 0 0 6 5.3L3 8" /><path d="M21 22v-6h-6" /><path d="M3 12a9 9 0 0 0 15 6.7l3-2.7" /></svg>
         </button>
-
       </div>
-      <div className="flex">
-
-    <label className= "text-lg ml-4">Session Task: </label>
-            <input type="text" 
-            className="border p-2 ml-4" placeholder="Session Task Name"
-            value={sessionName}
-            onChange={(e) => setSessionName(e.target.value)}
-            />
-
-    <label className= "text-lg ml-4">Session Duration: </label>
-                <select
-        value={selectedDuration}
-        onChange={(e) => {
-          const selected = Number(e.target.value);
-          setSelectedDuration(selected);
-          setSeconds(selected);   // countdown starts from this
-          setGoalSeconds(selected); // store actual goal for progress
-        }}
-        className="border p-2 ml-4"
-      >
-        <option className="bg-white text-black" value={0}>Select Duration </option>
-        {timerOptions.map((opt) => (
-          <option key={opt.seconds} value={opt.seconds} className="bg-white text-black">
-            {opt.label}
-          </option>
-        ))}
-      </select>
-
-
-          <label className= "text-lg ml-4">Work Type: </label>
-        <select 
-        value={workType} 
-        className="border p-2 ml-4" 
-        onChange={(e) => setWorkType(e.target.value)}>
-            <option value="" className="bg-white text-black">Select Type</option>
-            <option value="Deep" className="bg-white text-black">Deep Work</option>
-            <option value="Light" className="bg-white text-black">Light Work</option>
-            <option value="Study" className="bg-white text-black">Study</option>
-        </select>
-      </div>
-              
-        {error && <p className="text-red-600 mt-2">{error}</p>}
     </div>
   );
 }
