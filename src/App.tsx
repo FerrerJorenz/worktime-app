@@ -3,9 +3,11 @@ import Dashboard from "./components/Dashboard"
 
 function App() {
   return (
-    <div>
+    <div className="flex flex-col items-center min-h-screen">
       <Header />
-      <Dashboard></Dashboard>
+      <div className="flex-1 flex flex-col items-center justify-center w-full">
+        <Dashboard />
+      </div>
     </div>
   )
 }

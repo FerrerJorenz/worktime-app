@@ -7,7 +7,7 @@ type Props = {
 export default function SessionTable({ sessions }: Props) {
 
     return (
-        <div className="overflow-x-auto mb-6">
+        <div className="overflow-x-auto mb-6 mt-6">
             <table className="min-w-full border">
                 <caption className="mb-3">Work Sessions</caption>
                 <thead className="bg-gray-600">

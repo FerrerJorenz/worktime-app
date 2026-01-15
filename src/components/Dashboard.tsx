@@ -1,6 +1,7 @@
 import { useState } from "react";
 import SessionForm from "./SessionForm"
 import SessionTable from "./SessionTable"
+import SessionTimer from "./SessionTimer"
 
 export type Session = {
   sessionName: string;
@@ -18,8 +19,10 @@ export default function Dashboard() {
 
   return (
     <div className="ml-6">
+      <SessionTimer></SessionTimer>
       <SessionTable sessions={sessions} />   
-      <SessionForm onAddSession={addSession} />   
+      <SessionForm onAddSession={addSession} />
+      
     </div>
   )
 }
