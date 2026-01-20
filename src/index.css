@@ -92,3 +92,22 @@ input::-ms-reveal,
 input::-ms-clear {
   display: none;
 }
+
+/* Fix Autocomplete style in Chrome/Edge */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px var(--color-bg-input) inset !important;
+  -webkit-text-fill-color: var(--color-text-primary) !important;
+  transition: background-color 5000s ease-in-out 0s;
+  caret-color: var(--color-text-primary);
+}
+
+/* Hide the "suggest strong password" overlay in WebKit if possible to use ours */
+input::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+}
