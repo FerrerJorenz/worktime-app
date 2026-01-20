@@ -86,3 +86,9 @@ button {
 button:active {
   transform: scale(0.98);
 }
+
+/* Remove native password eye in Edge/IE */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
