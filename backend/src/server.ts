@@ -4,6 +4,9 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { pool } from './config/database';
+import authRoutes from './routes/auth.routes';
+import sessionsRoutes from './routes/sessions.routes';
+import projectsRoutes from './routes/projects.routes';
 
 // Load environment variables
 dotenv.config();
@@ -41,7 +44,12 @@ app.get('/health', async (_req: Request, res: Response) => {
     }
 });
 
-// API Routes (will be added in Day 2)
+// Mount API routes
+app.use('/api/auth', authRoutes);
+app.use('/api/sessions', sessionsRoutes);
+app.use('/api/projects', projectsRoutes);
+
+// API info endpoint
 app.get('/api', (_req: Request, res: Response) => {
     res.json({
         message: 'WorkTime API v1.0',
